@@ -1,0 +1,22 @@
+import Config
+
+# Test configuration
+config :firebase_admin,
+  project_id: "test-project-id",
+  credentials: %{
+    "type" => "service_account",
+    "project_id" => "test-project",
+    "private_key_id" => "test-key-id",
+    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest-key\n-----END PRIVATE KEY-----\n",
+    "client_email" => "test@test-project.iam.gserviceaccount.com",
+    "client_id" => "123456789",
+    "auth_uri" => "https://accounts.google.com/o/oauth2/auth",
+    "token_uri" => "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url" => "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url" =>
+      "https://www.googleapis.com/robot/v1/metadata/x509/test@test-project.iam.gserviceaccount.com"
+  },
+  cache_dir: "test/cache"
+
+# Configure logger for tests
+config :logger, level: :warning

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(MIX_ENV=integration_test mix compile)",
+      "Bash(MIX_ENV=integration_test mix test test/integration/)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
