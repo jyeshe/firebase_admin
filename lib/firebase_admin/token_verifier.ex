@@ -53,11 +53,11 @@ defmodule FirebaseAdmin.TokenVerifier do
   def verify(token) when is_binary(token) do
     # Lazy initialization
     with :ok <- ensure_initialized(),
-      :ok <- basic_token_validation(token),
-      {:ok, keys} <- load_keys_from_cache() do
-        with :error <- do_verify(token, keys) do
-          maybe_refresh_keys()
-        end
+         :ok <- basic_token_validation(token),
+         {:ok, keys} <- load_keys_from_cache() do
+      with :error <- do_verify(token, keys) do
+        maybe_refresh_keys()
+      end
     end
   end
 
@@ -66,10 +66,11 @@ defmodule FirebaseAdmin.TokenVerifier do
   """
   @spec refresh_keys() :: :ok
   def refresh_keys do
-    task = Task.async(fn ->
-      schedule_refresh()
-      fetch_and_cache_keys()
-    end)
+    task =
+      Task.async(fn ->
+        schedule_refresh()
+        fetch_and_cache_keys()
+      end)
 
     Task.yield(task, 5000) || Task.ignore(task)
 
@@ -109,7 +110,7 @@ defmodule FirebaseAdmin.TokenVerifier do
         type: :set
       )
 
-     maybe_refresh_keys()
+    maybe_refresh_keys()
   end
 
   defp fetch_and_cache_keys do

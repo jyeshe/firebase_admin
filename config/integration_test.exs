@@ -10,7 +10,6 @@ config :firebase_admin,
   use_real_firebase: true,
   max_fetch_retries: 2
 
-
 # Configure logger for integration tests
 config :logger, level: :info
 

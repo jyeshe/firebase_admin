@@ -31,7 +31,7 @@ defmodule FirebaseAdmin.MixProject do
       {:joken, "~> 2.6"},
       {:goth, "~> 1.4"},
       {:jason, "~> 1.4"},
-      {:bypass, "~> 2.1", only: [:test, :integration_test]},
+      {:plug, ">= 0.0.0"},
       {:mox, "~> 1.0", only: :test},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]

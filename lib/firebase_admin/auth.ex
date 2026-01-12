@@ -42,7 +42,8 @@ defmodule FirebaseAdmin.Auth do
           :persistent_term.put({__MODULE__, :project_id}, {:ok, project_id})
           {:ok, project_id}
 
-        _error -> {:error, :no_credentials_project}
+        _error ->
+          {:error, :no_credentials_project}
       end
     end
   end
