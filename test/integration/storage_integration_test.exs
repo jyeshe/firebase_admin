@@ -1,6 +1,8 @@
 defmodule FirebaseAdmin.StorageIntegrationTest do
   use ExUnit.Case, async: false
 
+  @moduletag :integration
+
   import FirebaseAdmin.IntegrationTestHelper
   alias FirebaseAdmin.Storage
 
@@ -8,7 +10,9 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
   @object_prefix "test_files"
 
   # Simple 1x1 pixel PNG image (base64 encoded)
-  @test_image_data Base.decode64!("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
+  @test_image_data Base.decode64!(
+                     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+                   )
 
   describe "Firebase Cloud Storage Integration Tests" do
     integration_test "uploads and downloads a text file" do
@@ -16,8 +20,10 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
       name = "get_test_#{uniq}.txt"
       file_content = "Some content of file with #{uniq}"
 
-      assert {:ok, _file_url} = Storage.upload_file(@test_bucket, @object_prefix, name, file_content,
-             content_type: "text/plain")
+      assert {:ok, _file_url} =
+               Storage.upload_file(@test_bucket, @object_prefix, name, file_content,
+                 content_type: "text/plain"
+               )
 
       assert {:ok, ^file_content} = Storage.download_file(@test_bucket, @object_prefix, name)
     end
@@ -25,8 +31,11 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
     integration_test "uploads and download an image file" do
       # Upload a PNG image to Firebase Storage
       name = "get_image_test_#{System.system_time(:microsecond)}.png"
-      assert {:ok, _file_url} = Storage.upload_file(@test_bucket, @object_prefix, name, @test_image_data,
-             content_type: "image/png")
+
+      assert {:ok, _file_url} =
+               Storage.upload_file(@test_bucket, @object_prefix, name, @test_image_data,
+                 content_type: "image/png"
+               )
 
       # Download and verify the image
       assert {:ok, downloaded_data} = Storage.download_file(@test_bucket, @object_prefix, name)
@@ -43,7 +52,8 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
       # Try to download a file that doesn't exist
       non_existent_path = "test_files/does_not_exist_#{System.system_time(:microsecond)}.txt"
 
-      assert {:error, :file_not_found} = Storage.download_file(@test_bucket, @object_prefix, non_existent_path)
+      assert {:error, :file_not_found} =
+               Storage.download_file(@test_bucket, @object_prefix, non_existent_path)
     end
 
     integration_test "validates bucket configuration" do
@@ -60,11 +70,17 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
         {:error, %{"error" => %{"message" => message}}} ->
           cond do
             String.contains?(message, "ACCESS_DENIED") ->
-              flunk("Storage list access denied - check service account permissions for bucket: #{configured_bucket}")
+              flunk(
+                "Storage list access denied - check service account permissions for bucket: #{configured_bucket}"
+              )
 
-            String.contains?(message, "bucket does not exist") or String.contains?(message, "BUCKET_NOT_FOUND") ->
+            String.contains?(message, "bucket does not exist") or
+                String.contains?(message, "BUCKET_NOT_FOUND") ->
               # Bucket doesn't exist - this is expected for some test environments
-              IO.puts("Note: Storage bucket #{configured_bucket} doesn't exist - basic connectivity test passed")
+              IO.puts(
+                "Note: Storage bucket #{configured_bucket} doesn't exist - basic connectivity test passed"
+              )
+
               assert true
 
             true ->
@@ -73,7 +89,10 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
 
         {:error, reason} when is_binary(reason) ->
           if String.contains?(reason, "bucket does not exist") do
-            IO.puts("Note: Storage bucket #{configured_bucket} doesn't exist - basic connectivity test passed")
+            IO.puts(
+              "Note: Storage bucket #{configured_bucket} doesn't exist - basic connectivity test passed"
+            )
+
             assert true
           else
             flunk("Storage list failed with unexpected error: #{inspect(reason)}")
@@ -95,8 +114,9 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
         {:error, %{"error" => %{"message" => message}}} ->
           # If we get a 400 error for bucket validation, that's expected
           if String.contains?(message, "Invalid bucket name") or
-             String.contains?(message, "INVALID_ARGUMENT") do
-            assert true  # Expected failure
+               String.contains?(message, "INVALID_ARGUMENT") do
+            # Expected failure
+            assert true
           else
             # Other 400 errors should fail the test
             flunk("Unexpected 400 error: #{message}")
@@ -105,7 +125,8 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
         {:error, reason} when is_binary(reason) ->
           # Network errors are acceptable
           if String.contains?(reason, "bucket") or String.contains?(reason, "invalid") do
-            assert true  # Expected validation error
+            # Expected validation error
+            assert true
           else
             flunk("Unexpected error: #{reason}")
           end
@@ -130,6 +151,7 @@ defmodule FirebaseAdmin.StorageIntegrationTest do
               case file do
                 %{"name" => name} ->
                   Storage.delete_file(@test_bucket, name)
+
                 _ ->
                   :ok
               end

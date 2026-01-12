@@ -1,6 +1,8 @@
 defmodule FirebaseAdmin.AuthIntegrationTest do
   use ExUnit.Case, async: false
 
+  @moduletag :integration
+
   import FirebaseAdmin.IntegrationTestHelper
   alias FirebaseAdmin.Auth
 

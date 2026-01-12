@@ -1,9 +1,11 @@
 ExUnit.start()
 
-# Load integration test helper if running integration tests
-if System.get_env("MIX_ENV") == "integration_test" do
-  Code.require_file("integration_test_helper.exs", __DIR__)
-end
+# Exclude integration tests by default
+# Use --include integration to run them
+ExUnit.configure(exclude: [integration: true])
+
+# Always load integration test helper
+Code.require_file("integration_test_helper.exs", __DIR__)
 
 # Helper functions for tests
 defmodule FirebaseAdmin.TestHelper do

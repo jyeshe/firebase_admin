@@ -5,42 +5,6 @@ defmodule ExampleUsage do
   This module demonstrates common patterns you might use in a Phoenix
   controller, LiveView, or background job processor.
   """
-
-  @doc """
-  Example: Authenticate a user from a Phoenix controller.
-
-  In your controller:
-
-      defmodule MyAppWeb.AuthController do
-        use MyAppWeb, :controller
-
-        def authenticate(conn, %{"id_token" => id_token}) do
-          case ExampleUsage.authenticate_user(id_token) do
-            {:ok, user_claims} ->
-              conn
-              |> put_session(:user_id, user_claims["sub"])
-              |> put_session(:email, user_claims["email"])
-              |> json(%{success: true, user_id: user_claims["sub"]})
-
-            {:error, reason} ->
-              conn
-              |> put_status(:unauthorized)
-              |> json(%{error: "Authentication failed", reason: reason})
-          end
-        end
-      end
-  """
-  def authenticate_user(id_token) do
-    case FirebaseAdmin.verify_token(id_token) do
-      {:ok, claims} ->
-        # Additional validation or user lookup can happen here
-        {:ok, claims}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
   @doc """
   Example: Sign out a user from all devices.
 
@@ -55,34 +19,6 @@ defmodule ExampleUsage do
       {:error, reason} ->
         {:error, reason}
     end
-  end
-
-  @doc """
-  Example: Send a notification to a user's device.
-
-  This could be triggered by a background job, webhook, or user action.
-  """
-  def send_notification_to_user(device_token, title, body, data \\ %{}) do
-    message = %{
-      token: device_token,
-      notification: %{
-        title: title,
-        body: body
-      },
-      data: data,
-      android: %{
-        priority: "high"
-      },
-      apns: %{
-        payload: %{
-          aps: %{
-            sound: "default"
-          }
-        }
-      }
-    }
-
-    FirebaseAdmin.send_message(message)
   end
 
   @doc """
@@ -174,41 +110,6 @@ defmodule ExampleUsage do
   #     pipeline :firebase_auth do
   #       plug ExampleUsage.FirebaseAuthPlug
   #     end
-  defmodule FirebaseAuthPlug do
-    @moduledoc "Example Firebase authentication plug - requires :plug dependency"
-
-    # Commented out to avoid compilation error since Plug is not in dependencies
-    # import Plug.Conn
-
-    def init(opts), do: opts
-
-    def call(_conn, _opts) do
-      # Example implementation - requires :plug and :phoenix dependencies
-      # case get_req_header(conn, "authorization") do
-      #   ["Bearer " <> token] ->
-      #     case FirebaseAdmin.verify_token(token) do
-      #       {:ok, claims} ->
-      #         conn
-      #         |> assign(:current_user_id, claims["sub"])
-      #         |> assign(:firebase_claims, claims)
-      #
-      #       {:error, _reason} ->
-      #         conn
-      #         |> put_status(:unauthorized)
-      #         |> Phoenix.Controller.json(%{error: "Invalid token"})
-      #         |> halt()
-      #     end
-      #
-      #   _ ->
-      #     conn
-      #     |> put_status(:unauthorized)
-      #     |> Phoenix.Controller.json(%{error: "Missing authorization header"})
-      #     |> halt()
-      # end
-      raise "FirebaseAuthPlug requires :plug and :phoenix dependencies. Add them to your deps."
-    end
-  end
-
   # Private helper functions (you'd implement these based on your database)
 
   defp get_user_device_tokens(_user_id) do

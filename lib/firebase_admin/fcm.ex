@@ -1,4 +1,4 @@
-defmodule FirebaseAdmin.Messaging do
+defmodule FirebaseAdmin.FCM do
   @moduledoc """
   Firebase Cloud Messaging (FCM) implementation.
 
@@ -8,6 +8,7 @@ defmodule FirebaseAdmin.Messaging do
 
   require Logger
   alias FirebaseAdmin.Auth
+  alias FirebaseAdmin.FCM.Message
 
   @fcm_base_url "https://fcm.googleapis.com/v1"
   @max_multicast_size 500
@@ -16,54 +17,14 @@ defmodule FirebaseAdmin.Messaging do
   @doc """
   Sends a message to a single device.
 
-  ## Parameters
-
-    - `message` - Map containing the message configuration
-
-  ## Message structure
-
-      %{
-        token: "device_token",              # Required
-        notification: %{                    # Optional
-          title: "Title",
-          body: "Body",
-          image: "https://..."
-        },
-        data: %{                           # Optional - string key-value pairs
-          "key1" => "value1",
-          "key2" => "value2"
-        },
-        android: %{                        # Optional Android config
-          priority: "high",
-          notification: %{
-            sound: "default",
-            color: "#ff0000"
-          }
-        },
-        apns: %{                           # Optional iOS config
-          payload: %{
-            aps: %{
-              sound: "default",
-              badge: 1
-            }
-          }
-        },
-        webpush: %{                        # Optional Web config
-          notification: %{
-            icon: "https://..."
-          }
-        }
-      }
-
   ## Returns
 
     - `{:ok, message_id}` - Message sent successfully
     - `{:error, reason}` - Send failed
   """
-  @spec send(map()) :: {:ok, String.t()} | {:error, term()}
+  @spec send(Message.t()) :: {:ok, String.t()} | {:error, term()}
   def send(message) do
-    with :ok <- validate_message(message),
-         {:ok, project_id} <- Auth.get_project_id(),
+    with {:ok, project_id} <- Auth.get_project_id(),
          {:ok, access_token} <- Auth.get_access_token() do
       send_message(message, project_id, access_token)
     end
@@ -122,12 +83,6 @@ defmodule FirebaseAdmin.Messaging do
   def send_multicast(_), do: {:error, :missing_tokens}
 
   # Private functions
-
-  defp validate_message(%{token: token}) when is_binary(token), do: :ok
-  defp validate_message(%{topic: topic}) when is_binary(topic), do: :ok
-  defp validate_message(%{condition: condition}) when is_binary(condition), do: :ok
-  defp validate_message(_), do: {:error, :invalid_message_missing_target}
-
   defp validate_multicast_message(%{tokens: tokens}) when is_list(tokens) do
     cond do
       not Enum.all?(tokens, &is_binary/1) ->
@@ -146,7 +101,7 @@ defmodule FirebaseAdmin.Messaging do
   defp send_message(message, project_id, access_token) do
     url = "#{@fcm_base_url}/projects/#{project_id}/messages:send"
 
-    payload = build_payload(message)
+    payload = %{message: Message.to_map(message)}
 
     headers = [
       {"authorization", "Bearer #{access_token}"},
@@ -210,57 +165,11 @@ defmodule FirebaseAdmin.Messaging do
     {:ok, result}
   end
 
-  defp build_payload(message) do
-    fcm_message =
-      %{}
-      |> add_token(message)
-      |> add_notification(message)
-      |> add_data(message)
-      |> add_android_config(message)
-      |> add_apns_config(message)
-      |> add_webpush_config(message)
+  # defp add_webpush_config(payload, %{webpush: webpush}) when is_map(webpush) do
+  #   Map.put(payload, :webpush, webpush)
+  # end
 
-    %{message: fcm_message}
-  end
-
-  defp add_token(payload, %{token: token}), do: Map.put(payload, :token, token)
-  defp add_token(payload, _), do: payload
-
-  defp add_notification(payload, %{notification: notification}) when is_map(notification) do
-    Map.put(payload, :notification, notification)
-  end
-
-  defp add_notification(payload, _), do: payload
-
-  defp add_data(payload, %{data: data}) when is_map(data) do
-    # Ensure all data values are strings as required by FCM
-    string_data =
-      data
-      |> Enum.map(fn {k, v} -> {to_string(k), to_string(v)} end)
-      |> Map.new()
-
-    Map.put(payload, :data, string_data)
-  end
-
-  defp add_data(payload, _), do: payload
-
-  defp add_android_config(payload, %{android: android}) when is_map(android) do
-    Map.put(payload, :android, android)
-  end
-
-  defp add_android_config(payload, _), do: payload
-
-  defp add_apns_config(payload, %{apns: apns}) when is_map(apns) do
-    Map.put(payload, :apns, apns)
-  end
-
-  defp add_apns_config(payload, _), do: payload
-
-  defp add_webpush_config(payload, %{webpush: webpush}) when is_map(webpush) do
-    Map.put(payload, :webpush, webpush)
-  end
-
-  defp add_webpush_config(payload, _), do: payload
+  # defp add_webpush_config(payload, _), do: payload
 
   defp parse_fcm_error(%{"error" => %{"message" => message, "details" => details}}) do
     %{message: message, details: details}

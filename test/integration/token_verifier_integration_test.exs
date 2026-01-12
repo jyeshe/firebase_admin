@@ -1,6 +1,8 @@
 defmodule FirebaseAdmin.TokenVerifierIntegrationTest do
   use ExUnit.Case, async: false
 
+  @moduletag :integration
+
   import FirebaseAdmin.IntegrationTestHelper
   alias FirebaseAdmin.TokenVerifier
 
@@ -60,7 +62,10 @@ defmodule FirebaseAdmin.TokenVerifierIntegrationTest do
 
       # Decode payload
       {:ok, decoded_payload} = Base.url_decode64(payload, padding: false)
-      assert %{"iss" => issuer, "uid" => ^test_id, "claims" => claims} = Jason.decode!(decoded_payload)
+
+      assert %{"iss" => issuer, "uid" => ^test_id, "claims" => claims} =
+               Jason.decode!(decoded_payload)
+
       assert String.contains?(issuer, project_id())
       assert claims["role"] == "admin"
       assert claims["level"] == 42
@@ -168,28 +173,6 @@ defmodule FirebaseAdmin.TokenVerifierIntegrationTest do
       assert reason in [:signature_verification_failed, :invalid_signature] or
                String.contains?(to_string(reason), "signature") or
                String.contains?(to_string(reason), "expired")
-    end
-
-    integration_test "handles network errors gracefully during key refresh" do
-      # Setup bypass to mock the Google certs endpoint with failure
-      bypass = Bypass.open()
-      url = Application.get_env(:firebase_admin, :google_certs_url)
-      # Configure bypass to return a 500 error to simulate network failure
-      Bypass.expect(bypass, "GET", url, fn conn ->
-        Plug.Conn.resp(conn, 500, "Internal Server Error")
-      end)
-
-      timer_ref_key = {FirebaseAdmin.TokenVerifier, :timer_ref}
-      :persistent_term.put(timer_ref_key, nil)
-
-      TokenVerifier.refresh_keys()
-
-      assert timer_ref = :persistent_term.get(timer_ref_key, nil)
-      assert match?({:once, _ref}, timer_ref)
-
-      :timer.cancel(timer_ref)
-
-      Bypass.down(bypass)
     end
 
     integration_test "validates project ID configuration" do

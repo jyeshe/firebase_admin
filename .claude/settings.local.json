@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(MIX_ENV=integration_test mix compile)",
-      "Bash(MIX_ENV=integration_test mix test test/integration/)"
+      "Bash(MIX_ENV=integration_test mix test --include integration)",
+      "Bash(mix test)",
+      "Bash(mix test:*)",
+      "Bash(erl:*)",
+      "Bash(iex:*)",
+      "Bash(elixir:*)"
     ],
     "deny": [],
     "ask": []

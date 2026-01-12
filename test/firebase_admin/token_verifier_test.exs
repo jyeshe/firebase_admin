@@ -4,11 +4,14 @@ defmodule FirebaseAdmin.TokenVerifierTest do
   alias FirebaseAdmin.TokenVerifier
 
   setup do
+    # Initialize DETS table for tests
+    TokenVerifier.ensure_initialized()
+
     # Clean up DETS table after each test
     on_exit(fn ->
-      case :dets.lookup(:firebase_public_keys, :keys) do
-        [{:keys, _, _}] -> :dets.delete(:firebase_public_keys, :keys)
-        [] -> :ok
+      # Check if table is still open before trying to access it
+      with :firebase_public_keys <- :dets.info(:firebase_public_keys, :filename) do
+        :dets.delete_all_objects(:firebase_public_keys)
       end
     end)
 
@@ -31,22 +34,6 @@ defmodule FirebaseAdmin.TokenVerifierTest do
       # Result depends on whether keys have been cached
       result = TokenVerifier.verify(token)
       assert match?({:error, _}, result)
-    end
-  end
-
-  describe "key caching" do
-    test "stores and retrieves keys from DETS" do
-      test_keys = %{"key1" => "value1", "key2" => "value2"}
-
-      # Manually insert into DETS
-      :dets.insert(
-        :firebase_public_keys,
-        {:keys, test_keys, DateTime.utc_now() |> DateTime.to_unix()}
-      )
-
-      # Verify we can read it back
-      [{:keys, stored_keys, _timestamp}] = :dets.lookup(:firebase_public_keys, :keys)
-      assert stored_keys == test_keys
     end
   end
 

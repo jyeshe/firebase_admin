@@ -62,7 +62,7 @@ defmodule FirebaseAdmin do
 
   alias FirebaseAdmin.TokenVerifier
   alias FirebaseAdmin.TokenRevocation
-  alias FirebaseAdmin.Messaging
+  alias FirebaseAdmin.FCM
 
   @doc """
   Verifies a Firebase ID token and returns the decoded claims.
@@ -152,7 +152,7 @@ defmodule FirebaseAdmin do
   """
   @spec send_message(map()) :: {:ok, String.t()} | {:error, term()}
   def send_message(message) do
-    Messaging.send(message)
+    FCM.send(message)
   end
 
   @doc """
@@ -197,6 +197,6 @@ defmodule FirebaseAdmin do
   """
   @spec send_multicast(map()) :: {:ok, map()} | {:error, term()}
   def send_multicast(message) do
-    Messaging.send_multicast(message)
+    FCM.send_multicast(message)
   end
 end
